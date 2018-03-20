@@ -82,7 +82,7 @@ ullong _rand(ullong max)
     number = rand() % max;
     return number;
 }
-
+/* old way */
 ullong _get_random_prime_number()
 {
     ullong number = 0;
@@ -92,6 +92,24 @@ ullong _get_random_prime_number()
         number = number + (1 - number % 2);
     }
     return number;
+}
+/* solovay strassen test*/
+int _jacobi(ullong a, ullong n) {
+    int result = 0;
+    //TODO: calculate jacobi
+    return result;
+}
+
+bool _solovay_strassen_test(ullong n) {
+    ullong a = 0;
+    int modex = 0, jac = 0;
+    if (n % 2 == 0 && n != 2) return false;
+    a = _rand(n); 
+    modex = _mod_pow(a, (n - 1) / 2, n);
+    jac = jacobi(a, n);
+    if (jac == modex) 
+        return true;
+    return false;
 }
 
 ullong _get_big_random_prime_number() {
