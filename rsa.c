@@ -8,6 +8,8 @@ typedef unsigned char bool;
 #define true 1
 #define false 0
 
+#define PRIME_MAX      10000
+#define PRIME_TEST_SCURITY 10
 #define PRIME_LIST_CNT 1000
 #define PRIME_CHOSE_RANGE PRIME_LIST_CNT / 4
 #define _MIN(x, y) (x < y ? x : y)
@@ -15,6 +17,138 @@ typedef unsigned char bool;
 
 ullong prime_list[PRIME_LIST_CNT];
 
+ullong _mod_pow(ullong x, ullong y, ullong m) {
+    ullong result = 1;
+    while(0 < y) {
+        if (y & 1) result = (result * x) % m;
+        y = y >> 1;
+        x = (x * x) % m;
+    }
+    return result;
+}
+
+ullong _lcm(ullong x, ullong y) {
+    ullong larger = _MAX(x, y), lesser = _MIN(x, y), i = 2;
+    while (larger * i % lesser != 0) {
+        i++;
+    }
+    return larger * i;
+}
+
+ullong _rand(ullong max)
+{
+    ullong number = 0;
+    number = rand() % max;
+    return number;
+}
+
+bool _prime_check(ullong number)
+{
+    ullong i = 2;
+    ullong max = sqrt(number);
+    if (number < 2)
+    {
+        return false;
+    }
+    if (2 == number)
+    {
+        return true;
+    }
+    if (number % 2 == 0 || number % 3 == 0)
+    {
+        return false;
+    }
+    for (i = 5; i < max; i++)
+    {
+        if (number % i)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+
+/* get random prime number from prime list */
+// ullong _get_random_prime_number()
+// {
+//     ullong number = 0;
+//     while (!_prime_check(number))
+//     {
+//         number = _rand(PRIME_LIST_CNT);
+//         number = number + (1 - number % 2);
+//     }
+//     return number;
+// }
+
+/* solovay strassen test*/
+ullong _gcd(ullong a, ullong b) {
+    ullong result = b;
+    while(result != 0) {
+        result  = a % b;
+        a = b;
+        b = result;
+    }
+    return a;
+}
+
+int _jacobi(ullong a, ullong n) {
+    int result = 0, tmp = 0;
+    //TODO: calculate jacobi
+    if (_gcd(a, n) != 1) return 0;
+    switch(a) {
+        case 1: {
+            return 1;
+        }
+        case 2: {
+            return ((n * n - 1) / 8) % 2 ? -1 : 1;
+        }
+        default: {
+            tmp = n;
+            n = a;
+            a = tmp % a;
+            return _jacobi(a, n) * ((a - 1) / 2 * (n - 1) / 2 % 2 ? -1 : 1);
+        }
+    }
+    return result;
+}
+
+bool _solovay_strassen_test(ullong n) {
+    ullong a = 0, tcnt = PRIME_TEST_SCURITY;
+    int modex = 0, jac = 0;
+    if (n % 2 == 0 && n != 2) return false;
+    while (0 < tcnt--) {
+        a = _rand(n); 
+        modex = _mod_pow(a, (n - 1) / 2, n);
+        jac = _jacobi(a, n);
+        if (jac != modex && jac != (modex - n)) 
+            return false;
+    }
+    return true;
+}
+/* get random prime by prime test */
+ullong _get_random_prime_number() {
+    ullong number = 0;
+    while(1) {
+        number = _rand(PRIME_MAX);
+        number += (1 - number % 2);
+        if (number < PRIME_MAX / 2) continue;
+        if (_solovay_strassen_test(number)) {
+            return number;
+        }
+        if (_prime_check(number)) {
+            printf("random odd: %llu, prime_check: true, solovay-test: false\n", number);
+        }
+    }
+}
+
+ullong _get_big_random_prime_number() {
+    return prime_list[PRIME_LIST_CNT - _rand(PRIME_CHOSE_RANGE) - 1];
+}
+
+ullong _get_small_random_prime_number() {
+    return prime_list[_rand(PRIME_CHOSE_RANGE)];
+}
 
 void _initialize_prime_list()
 {
@@ -44,101 +178,13 @@ void _initialize_prime_list()
 
 bool _initialize()
 {
-    _initialize_prime_list();
+    //_initialize_prime_list();
     srand(time(0));
     return true;
 }
 
-bool _prime_check(ullong number)
-{
-    ullong i = 2;
-    ullong max = sqrt(number);
-    if (number < 2)
-    {
-        return false;
-    }
-    if (2 == number)
-    {
-        return true;
-    }
-    if (number % 2 == 0 || number % 3 == 0)
-    {
-        return false;
-    }
-    for (i = 5; i < max; i++)
-    {
-        if (number % i)
-        {
-            printf("%llu is not prime, can div by %llu\n", number, i);
-            return false;
-        }
-    }
-    return true;
-}
-
-ullong _rand(ullong max)
-{
-    ullong number = 0;
-    number = rand() % max;
-    return number;
-}
-/* old way */
-ullong _get_random_prime_number()
-{
-    ullong number = 0;
-    while (!_prime_check(number))
-    {
-        number = _rand(PRIME_LIST_CNT);
-        number = number + (1 - number % 2);
-    }
-    return number;
-}
-/* solovay strassen test*/
-int _jacobi(ullong a, ullong n) {
-    int result = 0;
-    //TODO: calculate jacobi
-    return result;
-}
-
-bool _solovay_strassen_test(ullong n) {
-    ullong a = 0;
-    int modex = 0, jac = 0;
-    if (n % 2 == 0 && n != 2) return false;
-    a = _rand(n); 
-    modex = _mod_pow(a, (n - 1) / 2, n);
-    jac = jacobi(a, n);
-    if (jac == modex) 
-        return true;
-    return false;
-}
-
-ullong _get_big_random_prime_number() {
-    return prime_list[PRIME_LIST_CNT - _rand(PRIME_CHOSE_RANGE) - 1];
-}
-
-ullong _get_small_random_prime_number() {
-    return prime_list[_rand(PRIME_CHOSE_RANGE)];
-}
-
-ullong _mod_pow(ullong x, ullong y, ullong m) {
-    ullong result = 1;
-    while(0 < y) {
-        if (y & 1) result = (result * x) % m;
-        y = y >> 1;
-        x = (x * x) % m;
-    }
-    return result;
-}
-
-ullong _lcm(ullong x, ullong y) {
-    ullong larger = _MAX(x, y), lesser = _MIN(x, y), i = 2;
-    while (larger * i % lesser != 0) {
-        i++;
-    }
-    return larger * i;
-}
-
 void _show_prime_list();
+
 int main(void)
 {
     ullong p, q, n, l, e, d;
