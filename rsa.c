@@ -10,8 +10,10 @@ typedef unsigned char bool;
 
 #define PRIME_MAX      10000
 #define PRIME_TEST_SCURITY 10
+
 #define PRIME_LIST_CNT 1000
 #define PRIME_CHOSE_RANGE PRIME_LIST_CNT / 4
+
 #define _MIN(x, y) (x < y ? x : y)
 #define _MAX(x, y) (y < x ? x : y)
 
@@ -42,7 +44,7 @@ ullong _rand(ullong max)
     return number;
 }
 
-bool _prime_check(ullong number)
+bool _classic_prime_check(ullong number)
 {
     ullong i = 2;
     ullong max = sqrt(number);
@@ -63,23 +65,27 @@ bool _prime_check(ullong number)
         if (number % i)
         {
             return false;
-        }
+            }
     }
     return true;
 }
 
 
-/* get random prime number from prime list */
-// ullong _get_random_prime_number()
-// {
-//     ullong number = 0;
-//     while (!_prime_check(number))
-//     {
-//         number = _rand(PRIME_LIST_CNT);
-//         number = number + (1 - number % 2);
-//     }
-//     return number;
-// }
+ ullong _get_random_prime_number_classic()
+ {
+     ullong number = 0;
+     while (1)
+     {
+         number = _rand(PRIME_MAX);
+         number = number + (1 - number % 2);
+         if (number < PRIME_MAX / 2) {
+            continue;
+         }
+         if (_classic_prime_check(number)) {
+            return number;
+         }
+     }
+ }
 
 /* solovay strassen test*/
 ullong _gcd(ullong a, ullong b) {
@@ -94,7 +100,6 @@ ullong _gcd(ullong a, ullong b) {
 
 int _jacobi(ullong a, ullong n) {
     int result = 0, tmp = 0;
-    //TODO: calculate jacobi
     if (_gcd(a, n) != 1) return 0;
     switch(a) {
         case 1: {
@@ -136,18 +141,14 @@ ullong _get_random_prime_number() {
         if (_solovay_strassen_test(number)) {
             return number;
         }
-        if (_prime_check(number)) {
+        if (_classic_prime_check(number)) {
             printf("random odd: %llu, prime_check: true, solovay-test: false\n", number);
         }
     }
 }
 
-ullong _get_big_random_prime_number() {
+ullong _get_random_prime_number_list() {
     return prime_list[PRIME_LIST_CNT - _rand(PRIME_CHOSE_RANGE) - 1];
-}
-
-ullong _get_small_random_prime_number() {
-    return prime_list[_rand(PRIME_CHOSE_RANGE)];
 }
 
 void _initialize_prime_list()
@@ -178,7 +179,7 @@ void _initialize_prime_list()
 
 bool _initialize()
 {
-    //_initialize_prime_list();
+    _initialize_prime_list();
     srand(time(0));
     return true;
 }
